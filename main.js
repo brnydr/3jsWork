@@ -9,19 +9,32 @@ renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
 
 const geometry = new THREE.BoxGeometry(2, 2, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0x51138255 });
+
+// Modify the geometry's vertices to create beveled edges
+const vertices = geometry.vertices;
+for (let i = 0; i < vertices.length; i++) {
+  const vertex = vertices[i];
+  if (isEdgeVertex(vertex, geometry)) {
+    vertex.y += 0.2; // Adjust this value to control the bevel amount
+  }
+}
+
+function isEdgeVertex(vertex, geometry) {
+  const eps = 0.0001;
+  const { x, y, z } = vertex;
+  const { width, height, depth } = geometry.parameters;
+  return (
+    (Math.abs(x) === width / 2 && Math.abs(y) <= height / 2 + eps && Math.abs(z) <= depth / 2 + eps) ||
+    (Math.abs(y) === height / 2 && Math.abs(x) <= width / 2 + eps && Math.abs(z) <= depth / 2 + eps) ||
+    (Math.abs(z) === depth / 2 && Math.abs(x) <= width / 2 + eps && Math.abs(y) <= height / 2 + eps)
+  );
+}
+
+geometry.verticesNeedUpdate = true;
+
+const material = new THREE.MeshBasicMaterial({ color: 0x51138255, wireframe: true });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
-
-// Create edges geometry from the original geometry
-const edgesGeometry = new THREE.EdgesGeometry(geometry);
-
-// Create a line material for the edges
-const edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff }); // White color
-
-// Create a line mesh for the edges
-const edgesMesh = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-scene.add(edgesMesh);
 
 camera.position.z = 3;
 
